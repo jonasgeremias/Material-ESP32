@@ -1,6 +1,4 @@
 // Configurações da aplicação alteradas via OTA -------------------------------
-const uint32_t VERSAO_FIRMWARE = 1;
-
 // Rede Wifi
 #define SSID_WIFI_AP "OTA-WEBSERVER"
 #define PASS_WIFI_AP "123456789"
@@ -39,7 +37,6 @@ static EventGroupHandle_t app_event_group;
 #define CONECTADO_NO_WIFI BIT0
 #define RECEBEU_IP_DO_ROTEADOR BIT1
 
-void controle_app_led();
 void print_heap(int i);
 void app_controller(void *pvParameters);
 

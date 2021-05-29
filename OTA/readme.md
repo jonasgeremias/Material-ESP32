@@ -62,16 +62,11 @@ Se melhorar o código, não deixe de compartilhar comigo e qualquer coisa, mande
 
 
 ## Imagens da Aplicação
-<img src="./images/taskmonitor.JPG" width="600" height="300" />
+<img src="./images/taskmonitor.JPG" width="600" height="300" /><br/>
 <img src="./images/1.jpeg" width="200" height="400" /><br/>
 <img src="./images/2.jpeg" width="200" height="400" /><br/>
 <img src="./images/3.jpeg" width="200" height="400" /><br/>
 
-<video src="./images/video.mp4" width="600" height="auto" controls>
-  Your browser does not support the video tag.
-</video>
-
+[![Video OTA ESP32](./images/video.jpg)](https://youtu.be/mX3617_9erw "Video Youtube - Click to Watch!")
 <br/>
- <br/>
- 
 ##Valeu e Capricha! ;)
