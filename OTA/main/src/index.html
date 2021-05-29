@@ -1,0 +1,30 @@
+﻿<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+   <meta charset="utf-8">
+   <meta name="viewport" content="width=device-width, initial-scale=0.9">
+   <meta name="apple-mobile-web-app-capable" content="yes">
+   <meta name="theme-color" content="#000000">
+   <link rel="manifest" href="manifest.json">
+   <link rel="icon" type="image/x-icon" href="favicon.png">
+   <link rel="stylesheet" href="mini.css">
+   <link rel="stylesheet" href="./styles.css">
+   <title>WEB Server</title>
+</head>
+<body>
+   <noscript>Habilite o JavaScript do navegador</noscript>
+   <div class="row fill">
+      <div class="space"></div>
+      <h1 class='text-center block'>WEB Server</h1>
+      <div class="line"></div>
+      <button class="button tertiary fill large m-tb bold text-center" onclick="window.location.href = './ota.html';"><span
+            class="icon-upload inverse"></span> Atualização de firmware</button>
+      <button class="button tertiary fill large m-tb bold text-center"
+         onclick="window.location.href = './restart.html';">Reiniciar</button>
+      <button disabled class="button inverse fill large m-tb bold text-center" onclick="window.location.href = './realtime.html';"><span class="icon-location inverse"></span> Tempo real</button>
+      <button disabled class="button inverse fill large m-tb bold text-center" onclick="window.location.href = './configdevice.html';"><span class="icon-settings inverse"></span> Configurar dispositivo</button>
+      <button disabled class="button inverse fill large m-tb bold text-center" onclick="window.location.href = './report.html';"><span class="icon-calendar inverse"></span> Relatório</button>
+      <button disabled class="button inverse fill large m-tb bold text-center" onclick="window.location.href = './configwifi.html';"><span class="icon-rss inverse"></span> Configurar Wi-Fi</button>
+   </div>
+</body>
+</html>

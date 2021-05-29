@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+   <meta charset="utf-8">
+   <meta name="viewport" content="width=device-width, initial-scale=0.9">
+   <meta name="apple-mobile-web-app-capable" content="yes">
+   <meta name="theme-color" content="#000000">
+   <link rel="manifest" href="manifest.json">
+   <link rel="icon" type="image/x-icon" href="favicon.png">
+   <link rel="stylesheet" href="mini.css">
+   <link rel="stylesheet" href="./styles.css">
+   <title>WEB Server</title>
+</head>
+
+<body onload="getstatus()">
+   <div class="row fill">
+      <div class="space2"></div>
+      <h1 class='text-center block'>Atualização de firmware</h1>
+
+      <div class="line"></div>
+      <h4 id="latest_firmware"></h4>
+      <div class="space"></div>
+   </div>
+   <div class="block">
+      <div class='card fluid s-p s-m shadowed'>
+         <div class='section dark'>Atualização de firmware</div>
+         <div class="section row">
+            <progress value="0" max="100" id='ev_progress' class="tertiary fill col-sm-10"></progress>
+            <h5 class="col-sm-2 text-center s-m s-p" id="status">0%.</h5>
+            <div class="space"></div>
+            <input type="file" id="selectedFile" accept=".bin" style="display: none;" onchange="fileInfo()" />
+            <div class="row fill">
+               <button type="button" class="col-sm button tertiary s-m"
+                  onclick="document.getElementById('selectedFile').click();"><span class="icon-search inverse"></span>
+                  Browse...</button>
+               <button type='button' id="upload_button" disabled class="col-sm button s-m" onclick="updateFirmware(this)">
+                  <span class="icon-upload"></span>Update Firmware</button>
+            </div>
+            <label id="file_info"></label>
+            <div class="space"></div>
+         </div>
+      </div>
+   </div>
+   <div class="space"></div>
+
+   <a class="fab fab_back" href="index.html"><span class="icon-home inverse"></span></a>
+
+   <script type="text/javascript">
+      const fileInfo = () => {
+         var x = document.getElementById("selectedFile");
+         var file = x.files[0];
+         document.getElementById("status").innerHTML = "0%.";
+         document.getElementById("ev_progress").value = 0;
+         console.log(file);
+         if (typeof file !== 'undefined') {
+            document.getElementById('upload_button').removeAttribute('disabled');
+            document.getElementById("file_info").innerHTML = `<p>File: <b>${file.name}</b><br>Size: <b>${file.size} bytes</b></p>`;
+         }
+         else {
+            document.getElementById("file_info").innerHTML = "";
+            document.getElementById('upload_button').setAttribute('disabled', true);
+         }
+         
+      }
+      const updateFirmware = (btn) => {
+         btn.setAttribute('disabled', true);
+         let formData = new FormData();
+         let fileSelect = document.getElementById("selectedFile");
+
+         if (fileSelect.files && fileSelect.files.length == 1) {
+            var file = fileSelect.files[0];
+            formData.set("file", file, file.name);
+            
+            // Http Request
+            var xhr = new XMLHttpRequest();
+
+            // Upload progress
+            xhr.upload.addEventListener("progress", (evt) => {
+               if (evt.lengthComputable) {
+                  let percentComplete = (evt.loaded / evt.total) * 100;
+                  let x = Math.floor(percentComplete);
+                  document.getElementById("status").innerHTML = x + "%.";
+                  document.getElementById("ev_progress").value = x;
+               } else {
+                  window.alert('total size is unknown')
+               }
+            }, false);
+
+            xhr.upload.addEventListener('load', () => {
+               getstatus();
+            });
+            xhr.upload.addEventListener('error', () => {
+            });
+
+            xhr.open('POST', "/otaupdatefirmware");
+            xhr.responseType = "blob";
+            xhr.send(formData);
+         } else {
+            window.alert('Selecione um arquivo.')
+         }
+      }
+
+      function getstatus() {
+         var xhr = new XMLHttpRequest();
+         var requestURL = "/otastatus.json";
+         xhr.open('GET', requestURL, true);
+         xhr.setRequestHeader("Content-Type", "application/json");
+         xhr.onreadystatechange = function () { // Call a function when the state changes.
+            if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
+               var response = JSON.parse(xhr.responseText);
+               if (response.status >= 0) {
+                  document.getElementById("latest_firmware").innerHTML = "Última atualização:  " + response.compile_date + " - " + response.compile_time
+                  if (response.status == 1) {
+                     alert("Firmware atualizado! reinicie para aplicar as alterações.");
+                  }
+               } else {
+                  alert("Erro ao atualizar, verifique a conexão e tente novamente.");
+               }
+            }
+         }
+         xhr.send();
+      }
+   </script>
+</body>
+</html>
