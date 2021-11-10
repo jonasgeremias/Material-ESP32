@@ -19,6 +19,8 @@ a cor dos LEDs dos dispositivos.
     3. WEB SERVER para configurar os links MQTT;
     4. Memórias para varios modos.
 
+<img src="video/1.jpeg" height="400" width="700">
+
 ## Tutoria para implementação do MQTT
 
 ### Instalando o Mosquitto:
