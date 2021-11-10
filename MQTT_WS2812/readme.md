@@ -20,6 +20,7 @@ a cor dos LEDs dos dispositivos.
     4. Memórias para varios modos.
 
 <img src="video/1.jpeg" height="400" width="700">
+<img src="video/front_de_teste.PNG" height="400" width="700">
 
 ## Tutoria para implementação do MQTT
 
