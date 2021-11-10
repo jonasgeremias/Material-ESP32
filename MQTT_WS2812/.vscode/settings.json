@@ -1,0 +1,30 @@
+{
+    "files.associations": {
+        "mqtt_client.h": "c",
+        "queue.h": "c",
+        "semphr.h": "c",
+        "thread": "c",
+        "cjson.h": "c",
+        "random": "c",
+        "array": "c",
+        "string_view": "c",
+        "cmath": "cpp",
+        "chrono": "c",
+        "limits": "c",
+        "esp_timer.h": "c",
+        "spi_ws2812.h": "c",
+        "codecvt": "c",
+        "condition_variable": "c",
+        "cstddef": "c",
+        "list": "c",
+        "string": "c",
+        "optional": "c",
+        "future": "c",
+        "memory": "c",
+        "new": "c",
+        "functional": "c",
+        "type_traits": "c",
+        "*.ipp": "c",
+        "typeinfo": "c"
+    }
+}

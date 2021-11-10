@@ -1,0 +1,15 @@
+{
+  "name": "mosquitonode",
+  "version": "1.0.0",
+  "description": "teste de publicação e assinatura no mqtt",
+  "main": "index.js",
+  "scripts": {
+    "test": "node index.js"
+  },
+  "author": "Jonas P. Geremias",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1",
+    "mqtt": "^4.2.8"
+  }
+}
