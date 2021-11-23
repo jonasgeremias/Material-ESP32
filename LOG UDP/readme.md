@@ -32,6 +32,6 @@ python LOG_UDP_SERVER.py
 
 ## Demonstrando o funcionamento
 
-Neste gif, do lado direito é o LOG na serial, e do lado esquerdo o LOG por socket UDP:
+Neste gif, do lado esquerdo é o LOG na serial, e do lado direito o LOG por socket UDP:
 
 <img src="./videos/log udp.gif" width="800" heigth="600">
