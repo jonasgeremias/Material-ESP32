@@ -18,123 +18,16 @@
 #include "esp_log.h"
 #include "esp_timer.h"
 
-#include "mqtt_client.h"
-#define BUTTON 0
+#include "app_main.h"
 
-// Para pegar o tamanho do array
-#define ARRAY_SIZE_OF(a) (sizeof(a) / sizeof(a[0]))
-#define QTD_MODOS 17
-// Biblioteca de LEDs
-#define WS2812_LED_PIN GPIO_NUM_19
-#define WS2812_QTD_LEDS 72
-#include "SPI_WS2812/SPI_WS2812.c"
-
-#define LED_STATUS 2
-#include "LED_STATUS/LED_STATUS.c"
-
-// Biblioteca para tratar o pacote json recebido
-#include "cJSON.c"
-
-typedef enum effects_types_t
-{
-    EFFECTS_MODE_MONO = 0,
-    EFFECTS_MODE_MONO_SEQUENCE,
-    EFFECTS_MODE_ARRAY_COLORS,
-    EFFECTS_MODE_ARRAY_SPIN,
-    EFFECTS_MODE_MAX
-} effects_mode_t;
-
-typedef struct config_device_t
-{
-    char user[32];
-    char pass[32];
-    char uri[256];
-    int port;
-    int id;
-} config_device_t;
-
-typedef union
-{
-    struct
-    {
-        uint32_t red : 8;
-        uint32_t green : 8;
-        uint32_t blue : 8;
-        uint32_t nop : 8;
-    };
-    struct
-    {
-        uint32_t r : 8;
-        uint32_t g : 8;
-        uint32_t b : 8;
-        uint32_t n : 8;
-    };
-    uint32_t rgb;
-} RGB_t;
-
-typedef enum sequence_operation_mode_t
-{
-    SEQ_OPERATON_MODE_INIT = 0,
-    SEQ_OPERATON_MODE_RISING,
-    SEQ_OPERATON_MODE_ON,
-    SEQ_OPERATON_MODE_FALLING,
-    SEQ_OPERATON_MODE_OFF
-} sequence_operation_mode_t;
-
-typedef struct config_cycle_timers_t
-{
-    uint64_t rising;
-    uint64_t on;
-    uint64_t falling;
-    uint64_t off;
-} config_cycle_timers_t;
-
-/******************************************************************************
- *  Estruturas de controle 
- * ***************************************************************************/
-typedef struct config_WS2812_t
-{
-    uint16_t mode;
-    uint16_t qtd_colors;
-    char description[64];
-    RGB_t colors[WS2812_QTD_LEDS];
-    config_cycle_timers_t timer;
-} config_WS2812_t;
-
-/******************************************************************************
- *  Variáveis Globais 
- * ***************************************************************************/
-static const char *LOG_MQTT = "MQTT_WS2812";   // Imprimir no LOG
-static TaskHandle_t taskhandle_led_controller; // handle da tarefa de contrle dos leds.
-static QueueHandle_t config_led_queue;         // Para receber configurações do MQTT na tarefa de controle.
-uint64_t cycle_timer[4] = {0, 0, 0, 0};
-uint64_t cycle_timer_timeout = 0;
-uint64_t timer_init = 0; // para conseguir a porcentagem
-sequence_operation_mode_t sequence_operation_mode = SEQ_OPERATON_MODE_INIT;
-uint16_t count_sequence_cycles = 0;
-RGB_t demo_color = {.rgb = RED};
-
-static volatile config_device_t config_device = {
-    .uri = "mqtt://192.168.1.167",
-    .port = 1883,
-    .user = "device",
-    .pass = "device123",
-    .id = 1};
-
-static config_WS2812_t config_leds = {
-    .mode = 0,
-    .qtd_colors = 10,
-    .description = "Fill",
-    .timer = {
-        .rising = 250,
-        .on = 500,
-        .falling = 250,
-        .off = 500}};
+#ifdef DEBUG_UDP
+#include "../../LOG UDP/LOG_UDP.c"
+#endif
 
 /******************************************************************************
  *  Protótipos das funções 
  * ***************************************************************************/
-static void atualiza_leds(uint8_t mode);
+static void atualiza_leds(uint8_t *mode);
 static bool recebe_config_led();
 static void task_ws2812_controller(void *pv);
 static void mqtt_recebe_config(char *data);
@@ -272,7 +165,7 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event)
     // your_context_t *context = event->context;
     switch (event->event_id)
     {
-    case MQTT_EVENT_CONNECTED: 
+    case MQTT_EVENT_CONNECTED:
         // Assinar o tópico para receber configurações
         sprintf(buffer, "/lampadas/%d/config", config_device.id);
         ESP_LOGI(LOG_MQTT, "Assinando o topico: '%s'", buffer);
@@ -283,7 +176,7 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event)
         ESP_LOGI(LOG_MQTT, "Assinando o topico: '%s'", buffer);
         msg_id = esp_mqtt_client_subscribe(client, (char *)&buffer, 1);
         ESP_LOGI(LOG_MQTT, "Subscribe successful mode, msg_id=%d", msg_id);
-        
+
         modo_led_status(LED_STATUS_LIGADO);
         break;
     case MQTT_EVENT_DISCONNECTED:
@@ -399,34 +292,37 @@ void led_controller(bool demo)
     uint64_t timer = esp_timer_get_time(); // #define millis esp_timer_get_time
     float percent_time = 0;
 
-    // Controle de mode de operação, carrega os valores se no inicio d mode
-    if (sequence_operation_mode == 0)
-    {
-        cycle_timer[0] = config_leds.timer.rising;
-        cycle_timer[1] = config_leds.timer.on;
-        cycle_timer[2] = config_leds.timer.falling;
-        cycle_timer[3] = config_leds.timer.off;
-        cycle_timer_timeout = cycle_timer[0] * 1000 + timer;
-        timer_init = timer;
-        sequence_operation_mode++;
-    }
-
     // Controle de tempo e porcentagem de tempo
-    if (timer >= cycle_timer_timeout)
+    if ((timer >= cycle_timer_timeout) || (sequence_operation_mode == 0))
     {
-        if (++sequence_operation_mode > 4)
+        do
         {
-            sequence_operation_mode = 0;
+            // Controle de mode de operação, carrega os valores se no inicio d mode
+            if ((sequence_operation_mode >= 4) || (sequence_operation_mode == 0))
+            {
+                sequence_operation_mode = 1;
 
-            // Isso é para modo sequencia
-            if (++count_sequence_cycles >= config_leds.qtd_colors) {
-                count_sequence_cycles = 0;
+                cycle_timer[0] = config_leds.timer.rising;
+                cycle_timer[1] = config_leds.timer.on;
+                cycle_timer[2] = config_leds.timer.falling;
+                cycle_timer[3] = config_leds.timer.off;
+                cycle_timer_timeout = cycle_timer[0] * 1000 + timer;
+                timer_init = timer;
+
+                // Isso é para modo sequencia
+                if (++count_sequence_cycles >= config_leds.qtd_colors)
+                {
+                    count_sequence_cycles = 0;
+                }
             }
+            else
+                sequence_operation_mode++;
+        } while (cycle_timer[sequence_operation_mode - 1] == 0);
 
-            ESP_LOGW("COLOR", "count_sequence_cycles: %d",count_sequence_cycles);
-        }
         cycle_timer_timeout = cycle_timer[sequence_operation_mode - 1] * 1000 + timer;
         timer_init = timer;
+
+        ESP_LOGW("COLOR", "count_sequence_cycles: %d - %lld", count_sequence_cycles, cycle_timer_timeout);
     }
     else
     {
@@ -435,47 +331,47 @@ void led_controller(bool demo)
         if (percent_time > 100.0)
             percent_time = 100;
     }
-    
 
-    switch (config_leds.mode) {
-        case EFFECTS_MODE_MONO: 
-            update_color_rgb(&sequence_operation_mode, &percent_time, (demo)? &demo_color: &config_leds.colors[0].rgb);
+    switch (config_leds.mode)
+    {
+    case EFFECTS_MODE_MONO:
+        update_color_rgb(&sequence_operation_mode, &percent_time, (demo) ? &demo_color : &config_leds.colors[0].rgb);
         break;
-        case EFFECTS_MODE_MONO_SEQUENCE:
-            update_color_rgb(&sequence_operation_mode, &percent_time, (demo)? &demo_color: &config_leds.colors[count_sequence_cycles].rgb);
+    case EFFECTS_MODE_MONO_SEQUENCE:
+        update_color_rgb(&sequence_operation_mode, &percent_time, (demo) ? &demo_color : &config_leds.colors[count_sequence_cycles].rgb);
         break;
-        case EFFECTS_MODE_ARRAY_COLORS:
-            // @pending criar modo.
+    case EFFECTS_MODE_ARRAY_COLORS:
+        // @pending criar modo.
         break;
-        case EFFECTS_MODE_ARRAY_SPIN:
-            // @pending criar modo.
+    case EFFECTS_MODE_ARRAY_SPIN:
+        // @pending criar modo.
         break;
-        default: 
-            update_color_rgb(&sequence_operation_mode, &percent_time, (demo)? &demo_color: &config_leds.colors[0]);
+    default:
+        update_color_rgb(&sequence_operation_mode, &percent_time, (demo) ? &demo_color : &config_leds.colors[0]);
         break;
     }
 
     // Aqui deende do mode
-    
 }
 
-static void atualiza_leds(uint8_t mode)
+static void atualiza_leds(uint8_t *mode)
 {
     static uint8_t modo_anterior = 0xff;
 
-    if (mode != modo_anterior)
+    if (*mode != modo_anterior)
     {
-        modo_anterior = mode;
+        modo_anterior = *mode;
         count_sequence_cycles = 0;
-        sequence_operation_mode = SEQ_OPERATON_MODE_OFF;
+        sequence_operation_mode = SEQ_OPERATON_MODE_INIT;
+
     }
 
-    switch (mode)
+    switch (*mode)
     {
     case 0:
         demo_color.rgb = BLACK;
         led_controller(1);
-        break; 
+        break;
     case 1:
         demo_color.rgb = RED;
         led_controller(1);
@@ -530,6 +426,7 @@ static void atualiza_leds(uint8_t mode)
         fillBuffer((uint32_t)&config_leds.colors, WS2812_QTD_LEDS);
         break;
     default:
+        *mode = 0;
         fillColor(0);
         break;
     }
@@ -577,11 +474,10 @@ static void task_ws2812_controller(void *pv)
         recebe_config_led();
         if (monitora_botao())
         {
-            if (++mode > QTD_MODOS)
-                mode = 0;
+            mode++; // Limitado na função atualiza_leds.
             ESP_LOGI(LOG_MQTT, "recebe_config_led => %lld => mode : %d", esp_timer_get_time(), mode);
         }
-        atualiza_leds(mode);
+        atualiza_leds(&mode);
     }
 
     vTaskDelete(NULL);
@@ -625,5 +521,8 @@ void app_main(void)
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
     ESP_ERROR_CHECK(example_connect());
+
+    log_udp_init(LOG_UDP_IP, LOG_UDP_PORT, log_udp_vprintf);
+
     mqtt_app_start();
 }

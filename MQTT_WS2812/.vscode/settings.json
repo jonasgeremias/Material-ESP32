@@ -25,6 +25,10 @@
         "functional": "c",
         "type_traits": "c",
         "*.ipp": "c",
-        "typeinfo": "c"
+        "typeinfo": "c",
+        "app_main.h": "c",
+        "esp_log.h": "c",
+        "string.h": "c",
+        "log_udp.h": "c"
     }
 }

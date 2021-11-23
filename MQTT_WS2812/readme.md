@@ -22,7 +22,7 @@ a cor dos LEDs dos dispositivos.
 <img src="video/1.jpeg" height="400" width="700">
 <img src="video/front_de_teste.PNG" height="400" width="700">
 
-## Tutoria para implementação do MQTT
+## Tutorial para implementação do MQTT
 
 ### Instalando o Mosquitto:
 1. Instalar o mosquitto em <a href="https://mosquito.org/">mosquito.org</a>
@@ -108,3 +108,12 @@ níveis subsequentes da hierarquia. Ex.: `topic/#`.
     * PURPLE : 0x400080
     * ORANGE : 0xFF3000
     * PINK : 0xFF1493
+
+
+# Histórico de alterações
+
+* 23/11/2021 - Jonas P. G.:
+    * Corrigido ciclo do LED que se o tempo fosse 0, ele mesmo assim ele apagava o lED até o róximo ciclo. Agora basta colocar um tempo on qualquer, que o LED ficará acesso direto, se os outros parâmetros estiverem em 0.  
+    * Alterado função atualiza_leds para receber o ponteiro do valor do modo.
+    * Adicionado log udp. A ideia é utilizar junto com a OTA. 
+    
