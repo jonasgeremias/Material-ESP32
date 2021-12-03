@@ -1,8 +1,12 @@
 # Material para projetos com ESP32
 
 Alguns tutoriais para ajudar em projetos com esp32:
-1. OTA Local com WEB Server.
-2. MQTT_WS2812.
-3. Biblioteca LOG UDP.
 
+1. OTA Local com WEB Server.
+
+2. MQTT_WS2812, controle de fita endereçavel WS2812 via MQTT.
+
+3. Biblioteca LOG UDP: Para monitorar o LOG via UDP no computador.
+
+4. MQTT_LM35 : placa Wemos Lollin32-Oled, lm35 e MQTT.
 
