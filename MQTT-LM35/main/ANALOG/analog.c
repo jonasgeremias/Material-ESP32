@@ -4,14 +4,15 @@
 #include "driver/adc.h"
 #include "esp_adc_cal.h"
 
-#define DEFAULT_VREF 1100
-#define NO_OF_SAMPLES 100
+#define ADC_DEFAULT_VREF 1100
+#define ADC_NO_OF_SAMPLES 20
+#define ADC_SAMPLES_TIMER_MS 10 // = 20 * 10 ms = 200 ms.
 
 #ifndef PIN_ANALOG
 #define PIN_ANALOG ADC1_CHANNEL_4
 #endif
 
-const char* LOG_ANALOG = "log_analog";
+const char *LOG_ANALOG = "log_analog";
 static esp_adc_cal_characteristics_t *adc_chars;
 static const adc_channel_t adc_channel = PIN_ANALOG; // GPIO34 if ADC1
 static const adc_bits_width_t adc_width = ADC_WIDTH_BIT_12;
@@ -24,53 +25,66 @@ static void check_efuse(void)
     // Check if TP is burned into eFuse
     if (esp_adc_cal_check_efuse(ESP_ADC_CAL_VAL_EFUSE_TP) == ESP_OK)
     {
-        ESP_LOGI(LOG_ANALOG ,"eFuse Two Point: Supported\n");
+        ESP_LOGI(LOG_ANALOG, "eFuse Two Point: Supported\n");
     }
     else
     {
-        ESP_LOGI(LOG_ANALOG ,"eFuse Two Point: NOT supported\n");
+        ESP_LOGI(LOG_ANALOG, "eFuse Two Point: NOT supported\n");
     }
     // Check Vref is burned into eFuse
     if (esp_adc_cal_check_efuse(ESP_ADC_CAL_VAL_EFUSE_VREF) == ESP_OK)
     {
-        ESP_LOGI(LOG_ANALOG ,"eFuse Vref: Supported\n");
+        ESP_LOGI(LOG_ANALOG, "eFuse Vref: Supported\n");
     }
     else
     {
-        ESP_LOGI(LOG_ANALOG ,"eFuse Vref: NOT supported\n");
+        ESP_LOGI(LOG_ANALOG, "eFuse Vref: NOT supported\n");
     }
 }
 
 static void analog_loop()
 {
-    uint32_t adc_reading = 0;
-    // Multisampling
-    for (int i = 0; i < NO_OF_SAMPLES; i++)
+    static uint32_t adc_reading = 0;
+    static int samples_count = 0;
+    uint64_t timer = 0;
+    static bool adc_init = 0;
+    static uint64_t timer_timeout = 0;
+
+    // Para periodicidade do realtime.
+    timer = esp_timer_get_time();
+    if (timer >= timer_timeout)
     {
-        if (adc_unit == ADC_UNIT_1)
+        timer_timeout = timer + (ADC_SAMPLES_TIMER_MS * 1000);
+        do
         {
-            adc_reading += adc1_get_raw((adc1_channel_t)adc_channel);
-        }
-        else
-        {
-            int raw;
-            adc2_get_raw((adc2_channel_t)adc_channel, adc_width, &raw);
+            // Multisampling
+            if (adc_unit == ADC_UNIT_1)
+            {
+                adc_reading += adc1_get_raw((adc1_channel_t)adc_channel);
+            }
+            else
+            {
+                int raw;
+                adc2_get_raw((adc2_channel_t)adc_channel, adc_width, &raw);
+                adc_reading += raw;
+            }
 
-            printf("value=>%d\n", raw);
-            adc_reading += raw;
-        }
+            if (++samples_count >= ADC_NO_OF_SAMPLES)
+            {
+                adc_reading /= ADC_NO_OF_SAMPLES;
+                // Convert adc_reading to voltage in mV
+                uint32_t voltage = esp_adc_cal_raw_to_voltage(adc_reading, adc_chars);
+                temperature = (float)voltage / 10; // 0.01;
+                adc_reading = 0;
+                samples_count = 0;
+                adc_init = 1;
+            }
+        } while (!adc_init);
     }
-    adc_reading /= NO_OF_SAMPLES;
-
-    // Convert adc_reading to voltage in mV
-    uint32_t voltage = esp_adc_cal_raw_to_voltage(adc_reading, adc_chars);
-    
-
-    temperature = (float) voltage / 10; // 0.01;
-    //ESP_LOGI(LOG_ANALOG ,"Raw: %d,\tVoltage: %dmV\t,temp:%.1f°C \n", adc_reading, voltage, temp);
 }
 
-float read_temperature() {
+float read_temperature()
+{
     return temperature;
 }
 
@@ -84,5 +98,6 @@ static void analog_init(void)
 
     // Characterize ADC
     adc_chars = calloc(1, sizeof(esp_adc_cal_characteristics_t));
-    esp_adc_cal_value_t val_type = esp_adc_cal_characterize(adc_unit, adc_atten, adc_width, DEFAULT_VREF, adc_chars);
+    /*esp_adc_cal_value_t val_type = */
+    esp_adc_cal_characterize(adc_unit, adc_atten, adc_width, ADC_DEFAULT_VREF, adc_chars);
 }

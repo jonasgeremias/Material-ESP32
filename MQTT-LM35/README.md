@@ -3,8 +3,8 @@
 ## Funcionamento
 O hardware se conectará em um wi-fi e a cada periodo de tempo publicará a temperatura do sensor LM35.
 O hardware assinará o tópico `device/id/realtime` para receber todas as temperaturas dos outros hardwares, de acordo com as configurações de IDs.
-O hardware tambem assinará o tópico de configuração para receber os parâmetros de periodo, IDs monitorados (até 5) e coordenadas (se necessário).
-No circuito também possui um LED de status de conexão no broker MQTT e um botão para trocar de tela.
+O hardware também assinará o tópico de configuração para receber os parâmetros de periodo, IDs monitorados (até 5) e coordenadas (se necessário).
+No circuito também possui um LED de status de conexão no broker MQTT e um botão para trocar a visualização da tela.
 
 ## Dependências
 * Biblioteca OLED, foi copiada deste link e removida parte de SPI.
@@ -16,6 +16,7 @@ No circuito também possui um LED de status de conexão no broker MQTT e um bot�
 Configuração: 128x64.
 background: white
 Flip: vertical
+Draw mode: Vertical-1bit per pixel
 ``` 
 
 ## Estrutura dos dados
@@ -26,29 +27,27 @@ Na rota do broker: `device/${id_placa}/realtime`.
 ```
 {
 "id": 1,
+"mac": "0123456789AB",
 "description" : "Casa do Jonas"
 "temp": 27.1,
 "period" 30,
-"Long": -49.43364752,
-"Lat": -28.701026
+"Long": "-49.43364752",
+"Lat": "-28.701026"
 }
 ```
 
 ### JSON esperado na rota de configuração (Subscribe)
-# @audit PENDENTE receber configuração.
-Na rota do broker: `device/${id_placa}/config`
+* Na rota do broker: `device/${id_placa}/config`
 ```
 {
-   "period" 30,
-   "Long": -49.43364752,
+   "period" 15,
+   "id": 1,
+   "Long": "-49.43364752",
    "Lat": -28.701026,
    "description" : "Casa do Jonas",
-   "id_sub" : [2,3,4,5,6]
+   "subscribe_ids" : [2,3,-1,-1,-1]
 }
 ```
-
-## Adicionar links de referência
-* Parte de MQTT: <a href="https://github.com/jonasgeremias/Material-ESP32">Link do GitHub</a>
 
 ## Pendências para o hardware
 * Certificado SSL para conectar no broker.
@@ -58,10 +57,7 @@ Na rota do broker: `device/${id_placa}/config`
 
 ## Como melhorias:
 * Implementar OTA : usando a rota de config pra sinalizar.
-* Usar NVS para salvar as informações.
-* Criar web server local para visualização dos dados.
-* Desenvolver o Wifi Manager para configuração do wi-fi.
-
+* Desenvolver um Wifi Manager para configuração do wi-fi.
 
 ## Tutorial para implementação do MQTT
 
@@ -103,15 +99,20 @@ níveis subsequentes da hierarquia. Ex.: `topic/#`.
 
 #### Testando com usuário
 * iniciar o Mosquitto Broker: `mosquitto -c mosquitto.conf –v`.
-* Este comando será recusado por autenticação: `Mosquitto_sub –h localhost –p 1883 –t /topic/subtopic`.
-* Comando com autenticação será aceito: `Mosquitto_sub –h localhost –p 1883 –u device –P device123 –t /topic/subtopic`. Note o `–u admin –P abc`. para publicar: `Mosquitto_pub –h localhost –p 1883 –u device –P device123 –t /topic/subtopic -m "{\"id\": 1,\"description\" : \"Casa do Jonas\",\"temp\": 27.1,\"period\" 30,\"Long\": \"-49.43364752\",\"Lat\": \"-28.701026}\""`
+* Este comando será recusado por autenticação: `Mosquitto_sub –h localhost –p 1883 –t device/1/realtime`.
+* Comando com autenticação será aceito: `Mosquitto_sub –h localhost –p 1883 –u device –P device123 –t device/1/realtime`. Note o `–u device –P device123`. para publicar: `Mosquitto_pub –h localhost –p 1883 –u device –P device123 –t device/1/realtime -m "{\"id\": 1,\"description\" : \"Casa do Jonas\",\"temp\": 27.1,\"period\" 30,\"Long\": \"-49.43364752\",\"Lat\": \"-28.701026}\""`
+
+#### Testar recebimento de configurações
+* O device inicia com id 0 e não assina nenhum id para mnitoramento, logo é necessário mandar as configurações iniciais, alterando o `id` e o `subscribe_ids`:
+* Exemplo de configuração inicial (muda o id de 0 para 1, e assina os IDs 2 e 3): `Mosquitto_pub –h localhost –p 1883 –u device –P device123 –t device/0/config -m "{\"id\": 1,\"description\":\"Minha Casa\",\"temp\":27.1,\"period\":10,\"Long\":\"-49.43364752\",\"Lat\": \"-28.701026\",\"subscribe_ids\":[2,3,-1,-1,-1]}"`
 
 ## Imagens do hardware
+
 * A placa usada no projeto foi o Wemos Lollin32-Oled:
 
 <img src="images/lolin32-oled-pinout.jpg"/>
 
-* Abaixo são exibidas algumas imagens da montagem no protboard e funcionamento:
+* Abaixo são exibidas algumas imagens da montagem no protoboard e funcionamento:
 
 <img src="images/1.jpeg"/>
 <img src="images/2.jpeg"/>
@@ -120,4 +121,7 @@ níveis subsequentes da hierarquia. Ex.: `topic/#`.
 <img src="images/tela1.png"/>
 <img src="images/tela2.png"/>
 <img src="images/tela3.png"/>
+<img src="images/tela4.png"/>
 <img src="images/5.gif"/>
+<img src="images/6.gif"/>
+<img src="images/7.gif"/>
