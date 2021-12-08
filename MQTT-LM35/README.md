@@ -136,6 +136,18 @@ níveis subsequentes da hierarquia. Ex.: `topic/#`.
 <img src="images/6.gif"/>
 <img src="images/7.gif"/>
 
+
+## Dashboard web
+
+Para o monitoramento dos dispositivos, foi desenvolvida uma plataforma web utilizando o Framework React e as bibliotecas Google maps e MQTT
+A conexão da plataforma com o broker foi realizada atraves de um Websocket 
+
+### Imagens da plataforma
+
+<img src='dashboard/web/docs/map.png'/>
+<img src='dashboard-web/docs/historic.png'/>
+
+
 ## Autores deste projeto
 
 * Isaac Debiasi
