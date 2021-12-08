@@ -92,12 +92,15 @@ static void analog_init(void)
 {
     check_efuse();
 
+    gpio_set_pull_mode(PIN_ANALOG_HARDWARE, GPIO_PULLDOWN_ONLY);
+
     // Configure ADC
     adc1_config_width(adc_width);
     adc1_config_channel_atten(adc_channel, adc_atten);
 
     // Characterize ADC
     adc_chars = calloc(1, sizeof(esp_adc_cal_characteristics_t));
+
     /*esp_adc_cal_value_t val_type = */
     esp_adc_cal_characterize(adc_unit, adc_atten, adc_width, ADC_DEFAULT_VREF, adc_chars);
 }

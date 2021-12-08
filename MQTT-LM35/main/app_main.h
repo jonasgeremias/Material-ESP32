@@ -15,6 +15,7 @@
 
 // biblioteca da analógica
 #define PIN_ANALOG ADC1_CHANNEL_3
+#define PIN_ANALOG_HARDWARE 39
 #include "ANALOG/analog.c"
 
 #define MAX_DEVICES_LENGTH 5 // Se mudar este define, deve ser limpa a NVS, pois o tamanho das struct vai mudar.
@@ -72,9 +73,9 @@ static device_t device = {
     .id = ID_DEVICE,
     .mac_address = {0, 0, 0, 0, 0, 0},
     .period = 30,
-    .lg = "-49.43364752",
-    .lt = "-28.701026",
-    .description = "Casa do Jonas",
+    .lg = "0.0",
+    .lt = "0.0",
+    .description = "Configuracao",
     .subscribe_ids = {-1, -1, -1, -1, -1},
     .temperature = 0};
 

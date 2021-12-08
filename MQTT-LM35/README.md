@@ -6,21 +6,30 @@ O hardware assinará o tópico `device/id/realtime` para receber todas as temper
 O hardware também assinará o tópico de configuração para receber os parâmetros de periodo, IDs monitorados (até 5) e coordenadas (se necessário).
 No circuito também possui um LED de status de conexão no broker MQTT e um botão para trocar a visualização da tela.
 
+O ESP32 ao ser gravado, vem com os valores padrão (ID:0) ou seja, é necessário configurar pelo adminstrador do sistema.
+
 ## Dependências
 * Biblioteca OLED, foi copiada deste link e removida parte de SPI.
 <a href="https://github.com/nopnop2002/esp-idf-ssd1306.git">Link da bliblioteca do OLED</a>
 
 * Gerador de vetor a partir de imagem:
 <a href="https://javl.github.io/image2cpp/">image2cpp</a>
+
 ```
 Configuração: 128x64.
 background: white
 Flip: vertical
 Draw mode: Vertical-1bit per pixel
-``` 
+```
+
+## Passos para gravação do ESP
+* Abrir o menuconfig e configurara o Wi-Fi: `idf.py menuconfig`.
+* Abrir o arquivo `app_main.h` e editar a estrutura `config_mqtt` com as informações do broker e usuário e senha.
+* Limpar a memório do esp32 `idf.py -p comX erase_flash`.
+* Gravar o esp32 `idf.py -p comX flash monitor`.
+
 
 ## Estrutura dos dados
-
 ### JSON Publicado no realtime (Publish)
 Na rota do broker: `device/${id_placa}/realtime`.
 * O `ID` talvez nem precisaria mas facilitara o frontend pra não precisar ler quem enviou o realtime no tópico.
@@ -28,23 +37,24 @@ Na rota do broker: `device/${id_placa}/realtime`.
 {
 "id": 1,
 "mac": "0123456789AB",
-"description" : "Casa do Jonas"
+"description" : "Casa do fulano"
 "temp": 27.1,
 "period" 30,
-"Long": "-49.43364752",
-"Lat": "-28.701026"
+"Long": "0.0",
+"Lat": "0.0"
 }
 ```
 
 ### JSON esperado na rota de configuração (Subscribe)
 * Na rota do broker: `device/${id_placa}/config`
+* A observação foi limitada em 17 caracteres para escrever na tela do Oled.
 ```
 {
    "period" 15,
    "id": 1,
-   "Long": "-49.43364752",
-   "Lat": -28.701026,
-   "description" : "Casa do Jonas",
+   "Long": "0.0",
+   "Lat": 0.0,
+   "description" : "Descricao de teste",
    "subscribe_ids" : [2,3,-1,-1,-1]
 }
 ```
@@ -104,7 +114,7 @@ níveis subsequentes da hierarquia. Ex.: `topic/#`.
 
 #### Testar recebimento de configurações
 * O device inicia com id 0 e não assina nenhum id para mnitoramento, logo é necessário mandar as configurações iniciais, alterando o `id` e o `subscribe_ids`:
-* Exemplo de configuração inicial (muda o id de 0 para 1, e assina os IDs 2 e 3): `Mosquitto_pub –h localhost –p 1883 –u device –P device123 –t device/0/config -m "{\"id\": 1,\"description\":\"Minha Casa\",\"temp\":27.1,\"period\":10,\"Long\":\"-49.43364752\",\"Lat\": \"-28.701026\",\"subscribe_ids\":[2,3,-1,-1,-1]}"`
+* Exemplo de configuração inicial (muda o id de 0 para 1, e assina os IDs 2 e 3): `Mosquitto_pub –h localhost –p 1883 –u device –P device123 –t device/0/config -m "{\"id\": 2,\"description\":\"Minha Casa\",\"period\":10,\"long\":\"-49.43364752\",\"lat\": \"-28.701026\",\"subscribe_ids\":[2,3,-1,-1,-1]}"`
 
 ## Imagens do hardware
 
@@ -125,3 +135,9 @@ níveis subsequentes da hierarquia. Ex.: `topic/#`.
 <img src="images/5.gif"/>
 <img src="images/6.gif"/>
 <img src="images/7.gif"/>
+
+## Autores deste projeto
+
+* Isaac Debiasi
+* Jonas P. Geremias
+* Rodrigo Pasini de Souza 
