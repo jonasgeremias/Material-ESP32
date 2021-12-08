@@ -144,7 +144,7 @@ A conexão da plataforma com o broker foi realizada atraves de um Websocket
 
 ### Imagens da plataforma
 
-<img src='dashboard/web/docs/map.png'/>
+<img src='dashboard-web/docs/map.png'/>
 <img src='dashboard-web/docs/historic.png'/>
 
 
