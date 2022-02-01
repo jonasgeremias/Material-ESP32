@@ -10,3 +10,5 @@ Alguns tutoriais para ajudar em projetos com esp32:
 
 4. MQTT_LM35 : placa Wemos Lollin32-Oled, lm35 e MQTT.
 
+5. NVS_MEMORY : ESP32-WROOM-32D: código para uso da memoria NVS com algumas proteções e relatório.
+
