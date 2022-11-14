@@ -12,3 +12,5 @@ Alguns tutoriais para ajudar em projetos com esp32:
 
 5. NVS_MEMORY : ESP32-WROOM-32D: código para uso da memoria NVS com algumas proteções e relatório.
 
+6. TFT_ESP32_ILI9488 : TFT 3.5" com core Arduino e TFT_eSPI.
+
